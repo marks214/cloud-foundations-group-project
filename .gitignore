@@ -1,0 +1,5 @@
+/var.tfvars
+terraform.tfstate
+terraform.tfstate.backup
+.c9/*
+.terraform/*
