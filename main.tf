@@ -187,11 +187,11 @@ resource "aws_ecr_repository" "ecr_repo" {
 }
 
 resource "aws_iam_role" "codebuild_role" {
-  name = "cohort4-group3-cap2-TestCodeBuildRole"
+  name               = "cohort4-group3-cap2-TestCodeBuildRole"
   assume_role_policy = data.aws_iam_policy_document.codebuild_role_policy.json
-  
+
   inline_policy {
-    name = "cohort4-group3-cap2-codebuild-log-policy"
+    name   = "cohort4-group3-cap2-codebuild-log-policy"
     policy = data.aws_iam_policy_document.codebuild_log_policy.json
   }
 }
@@ -199,27 +199,43 @@ resource "aws_iam_role" "codebuild_role" {
 data "aws_iam_policy_document" "codebuild_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
-    
+
     principals {
-      type = "Service"
-      identifiers = [ "codebuild.amazonaws.com"]
+      type        = "Service"
+      identifiers = ["codebuild.amazonaws.com"]
     }
   }
 }
 
 data "aws_iam_policy_document" "codebuild_log_policy" {
   statement {
-    effect = "Allow"
-    actions = ["logs:*"]
-
+    effect    = "Allow"
+    actions   = ["logs:*"]
     resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObjectAcl",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      aws_s3_bucket.codepipeline_bucket.arn,
+      "${aws_s3_bucket.codepipeline_bucket.arn}/*"
+    ]
   }
 }
 
+
 resource "aws_iam_role_policy_attachment" "codebuild_role_policy" {
-  role = aws_iam_role.codebuild_role.name
+  role       = aws_iam_role.codebuild_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
-  
+
 }
 
 # -------------------------CODEBUILD-------------------------------
@@ -237,7 +253,7 @@ resource "aws_codebuild_project" "codebuild_project" {
   }
 
   cache {
-    type  = "NO_CACHE"
+    type = "NO_CACHE"
   }
 
   environment {
@@ -245,13 +261,13 @@ resource "aws_codebuild_project" "codebuild_project" {
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
-    privileged_mode = true
+    privileged_mode             = true
 
   }
 
   source {
-    type            = "GITHUB"
-    location        = "https://github.com/marks214/cloud-foundations-group-project.git"
+    type     = "GITHUB"
+    location = "https://github.com/marks214/cloud-foundations-group-project.git"
   }
 
 }
@@ -349,9 +365,10 @@ resource "aws_codepipeline" "codepipeline_project" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.codestar_connection.arn
-        FullRepositoryId = "marks214/cloud-foundations-group-project"
-        BranchName       = "main"
+        ConnectionArn        = aws_codestarconnections_connection.codestar_connection.arn
+        FullRepositoryId     = "marks214/cloud-foundations-group-project"
+        BranchName           = "main"
+        OutputArtifactFormat = "CODE_ZIP"
       }
     }
   }
