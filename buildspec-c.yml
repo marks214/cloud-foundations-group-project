@@ -10,7 +10,7 @@ phases:
   build:
     commands:
       - echo build Docker image on `date`
-      - cd react-new-todo/src
+      - cd react-new-todo
       - docker build -t todo:latest .
       - docker tag todo:latest 962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2-c:latest
   post_build:
