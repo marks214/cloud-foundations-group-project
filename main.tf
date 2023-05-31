@@ -189,6 +189,11 @@ resource "aws_ecr_repository" "ecr_repo" {
 resource "aws_iam_role" "codebuild_role" {
   name = "cohort4-group3-cap2-TestCodeBuildRole"
   assume_role_policy = data.aws_iam_policy_document.codebuild_role_policy.json
+  
+  inline_policy {
+    name = "cohort4-group3-cap2-codebuild-log-policy"
+    policy = data.aws_iam_policy_document.codebuild_log_policy.json
+  }
 }
 
 data "aws_iam_policy_document" "codebuild_role_policy" {
@@ -202,9 +207,19 @@ data "aws_iam_policy_document" "codebuild_role_policy" {
   }
 }
 
+data "aws_iam_policy_document" "codebuild_log_policy" {
+  statement {
+    effect = "Allow"
+    actions = ["logs:*"]
+
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_role_policy_attachment" "codebuild_role_policy" {
   role = aws_iam_role.codebuild_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+  
 }
 
 # -------------------------CODEBUILD-------------------------------
@@ -240,3 +255,144 @@ resource "aws_codebuild_project" "codebuild_project" {
   }
 
 }
+
+# -------------------------CODEPIPELINE-------------------------------
+resource "aws_s3_bucket" "codepipeline_bucket" {
+  bucket = "cohort4-group3-cap2-codepipeline-bucket"
+}
+
+data "aws_iam_policy_document" "codepipeline_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["codepipeline.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "codepipeline_role" {
+  name               = "cohort4-group3-cap2-codepipeline-role"
+  assume_role_policy = data.aws_iam_policy_document.codepipeline_assume_role.json
+}
+
+resource "aws_codestarconnections_connection" "codestar_connection" {
+  name          = "cohort4-group3-cap2-connect"
+  provider_type = "GitHub"
+}
+
+data "aws_iam_policy_document" "codepipeline_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObjectAcl",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      aws_s3_bucket.codepipeline_bucket.arn,
+      "${aws_s3_bucket.codepipeline_bucket.arn}/*"
+    ]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["codestar-connections:UseConnection"]
+    resources = [aws_codestarconnections_connection.codestar_connection.arn]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "codebuild:BatchGetBuilds",
+      "codebuild:StartBuild",
+    ]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "codepipeline_policy" {
+  name   = "cohort4-group3-cap2-codepipeline_policy"
+  role   = aws_iam_role.codepipeline_role.id
+  policy = data.aws_iam_policy_document.codepipeline_policy.json
+}
+
+
+resource "aws_codepipeline" "codepipeline_project" {
+  name     = "cohort4-group3-cap2"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    location = aws_s3_bucket.codepipeline_bucket.bucket
+    type     = "S3"
+
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.codestar_connection.arn
+        FullRepositoryId = "marks214/cloud-foundations-group-project"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["source_output"]
+      output_artifacts = ["build_output"]
+      version          = "1"
+
+      configuration = {
+        ProjectName = aws_codebuild_project.codebuild_project.name
+      }
+    }
+  }
+
+  # stage {
+  #   name = "Deploy"
+
+  #   action {
+  #     name            = "Deploy"
+  #     category        = "Deploy"
+  #     owner           = "AWS"
+  #     provider        = "CloudFormation"
+  #     input_artifacts = ["build_output"]
+  #     version         = "1"
+
+  #     configuration = {
+  #       ActionMode     = "REPLACE_ON_FAILURE"
+  #       Capabilities   = "CAPABILITY_AUTO_EXPAND,CAPABILITY_IAM"
+  #       OutputFileName = "CreateStackOutput.json"
+  #       StackName      = "MyStack"
+  #       TemplatePath   = "build_output::sam-templated.yaml"
+  #     }
+  #   }
+  # }
+}
+
