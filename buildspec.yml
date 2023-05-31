@@ -1,0 +1,20 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - echo install step...
+  pre_build:
+    commands:
+      - echo logging in to AWS ECR...
+      - $(aws ecr get-login --no-include-email --region us-west-2)
+  build:
+    commands:
+      - echo build Docker image on `date`
+      - cd react-new-todo/src
+      - docker build -t todo:latest .
+      - docker tag todo:latest 962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2-c:latest
+  post_build:
+    commands:
+      - echo build Docker image complete `date`
+      - echo push latest Docker images to ECR...
+      - docker push 962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2-c:latest
