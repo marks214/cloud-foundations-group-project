@@ -1,8 +1,15 @@
 version: 0.2
 phases:
   install:
+    runtime-versions:
+      terraform: 1.1.0
     commands:
       - echo install step...
+      - echo "Installing Terraform"
+      - curl -o terraform.zip https://releases.hashicorp.com/terraform/1.1.0/terraform_1.1.0_linux_amd64.zip
+      - unzip terraform.zip
+      - chmod +x terraform
+      - mv terraform /usr/local/bin/
   pre_build:
     commands:
       - echo logging in to AWS ECR...
@@ -13,12 +20,16 @@ phases:
       - cd react-new-todo
       - docker build -t todo:latest .
       - docker tag todo:latest 962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2:latest
+      - echo "Building infrastructure with Terraform"
+      - cd ../
+      - terraform init
+      - terraform apply --auto-approve
   post_build:
     commands:
       - echo build Docker image complete `date`
       - echo push latest Docker images to ECR...
       - docker push 962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2:latest
       - echo Writing image definitions file ...
-      - printf '[{"name":"cohort4-group3-cap2-todo-td","imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2:latest"}]' > ../imagedefinitions.json
+      - printf '[{"name":"cohort4-group3-cap2-todo-td","imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2:latest"}]' > imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
