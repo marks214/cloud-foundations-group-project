@@ -339,7 +339,9 @@ data "aws_iam_policy_document" "codepipeline_policy" {
     effect = "Allow"
 
     actions = [
-      "ecs:*"
+      "ecs:*",
+      "cloudwatch:*",
+      "iam:PassRole"
     ]
 
     resources = ["*"]
