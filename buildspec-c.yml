@@ -20,5 +20,7 @@ phases:
       - docker push 962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2-c:latest
       - echo Writing image definitions file ...
       - printf '[{"name":"todo-c","imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2-c:latest"}]' > imagedefinitions.json
+      - cat imagedefinitions.json
+      - pwd
 artifacts:
-  files: imagedefinitions.json
+  files: react-new-todo/imagedefinitions.json
