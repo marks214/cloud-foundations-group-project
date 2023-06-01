@@ -105,16 +105,16 @@ resource "aws_lb_target_group" "target_group" {
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = "${aws_default_vpc.default_vpc.id}" # Referencing the default VPC
+  vpc_id      = aws_default_vpc.default_vpc.id # Referencing the default VPC
 }
 
 resource "aws_lb_listener" "listener" {
-  load_balancer_arn = "${aws_alb.application_load_balancer.arn}" # Referencing our load balancer
+  load_balancer_arn = aws_alb.application_load_balancer.arn # Referencing our load balancer
   port              = "80"
   protocol          = "HTTP"
   default_action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.target_group.arn}" # Referencing our target group
+    target_group_arn = aws_lb_target_group.target_group.arn # Referencing our target group
   }
 }
 
@@ -126,14 +126,14 @@ resource "aws_ecs_service" "todo_service" {
   desired_count   = 3 # Setting the number of containers to 3
 
   load_balancer {
-    target_group_arn = "${aws_lb_target_group.target_group.arn}" # Referencing our target group
-    container_name   = "${aws_ecs_task_definition.todo_td.family}"
+    target_group_arn = aws_lb_target_group.target_group.arn # Referencing our target group
+    container_name   = aws_ecs_task_definition.todo_td.family
     container_port   = 3000 # Specifying the container port
   }
 
   network_configuration {
     subnets          = ["${aws_default_subnet.default_subnet_a.id}", "${aws_default_subnet.default_subnet_b.id}", "${aws_default_subnet.default_subnet_c.id}", "${aws_default_subnet.default_subnet_d.id}"]
-    assign_public_ip = true # Providing our containers with public IPs
+    assign_public_ip = true                                                # Providing our containers with public IPs
     security_groups  = ["${aws_security_group.service_security_group.id}"] # Setting the security group
   }
 }

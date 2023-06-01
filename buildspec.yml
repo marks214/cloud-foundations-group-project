@@ -19,6 +19,6 @@ phases:
       - echo push latest Docker images to ECR...
       - docker push 962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2:latest
       - echo Writing image definitions file ...
-      - printf '[{"name":"todo","imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2:latest"}]' > ../imagedefinitions.json
+      - printf '[{"name":"cohort4-group3-cap2-todo-td","imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2:latest"}]' > ../imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
