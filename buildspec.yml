@@ -1,8 +1,6 @@
 version: 0.2
 phases:
   install:
-    runtime-versions:
-      terraform: 1.1.0
     commands:
       - echo install step...
       - echo "Installing Terraform"
