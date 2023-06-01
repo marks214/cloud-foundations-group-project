@@ -13,6 +13,10 @@ terraform {
   }
 }
 
+data "aws_s3_bucket" "tf_state_bucket" {
+  bucket = "cohort4-group3-cap2-tf-state"
+}
+
 # Configure the AWS Provider
 provider "aws" {
   region     = "us-west-2"
@@ -226,7 +230,9 @@ data "aws_iam_policy_document" "codebuild_log_policy" {
 
     resources = [
       aws_s3_bucket.codepipeline_bucket.arn,
-      "${aws_s3_bucket.codepipeline_bucket.arn}/*"
+      "${aws_s3_bucket.codepipeline_bucket.arn}/*",
+      data.aws_s3_bucket.tf_state_bucket.arn,
+      "${data.aws_s3_bucket.tf_state_bucket.arn}/*"
     ]
   }
 }
@@ -314,7 +320,9 @@ data "aws_iam_policy_document" "codepipeline_policy" {
 
     resources = [
       aws_s3_bucket.codepipeline_bucket.arn,
-      "${aws_s3_bucket.codepipeline_bucket.arn}/*"
+      "${aws_s3_bucket.codepipeline_bucket.arn}/*",
+      data.aws_s3_bucket.tf_state_bucket.arn,
+      "${data.aws_s3_bucket.tf_state_bucket.arn}/*"
     ]
   }
 
