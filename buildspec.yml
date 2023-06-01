@@ -1,4 +1,8 @@
 version: 0.2
+env:
+  secrets-manager:
+    ACCESS_KEY: "arn:aws:secretsmanager:us-west-2:962804699607:secret:cohort4-group3-cap2-secret-BiI0vD:access_key"
+    SECRET_KEY: "arn:aws:secretsmanager:us-west-2:962804699607:secret:cohort4-group3-cap2-secret-BiI0vD:secret_key"
 phases:
   install:
     commands:
@@ -21,7 +25,7 @@ phases:
       - echo "Building infrastructure with Terraform"
       - cd ../
       - terraform init
-      - terraform apply --auto-approve
+      - terraform apply -var="access_key=$ACCESS_KEY" -var="secret_key=$SECRET_KEY" --auto-approve
   post_build:
     commands:
       - echo build Docker image complete `date`

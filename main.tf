@@ -20,8 +20,8 @@ data "aws_s3_bucket" "tf_state_bucket" {
 # Configure the AWS Provider
 provider "aws" {
   region     = "us-west-2"
-  #access_key = var.access_key
-  #secret_key = var.secret_key
+  access_key = var.access_key
+  secret_key = var.secret_key
 }
 
 resource "aws_s3_bucket" "json_bucket" {
@@ -235,6 +235,12 @@ data "aws_iam_policy_document" "codebuild_log_policy" {
       "${data.aws_s3_bucket.tf_state_bucket.arn}/*"
     ]
   }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["arn:aws:secretsmanager:us-west-2:962804699607:secret:cohort4-group3-cap2-secret-BiI0vD"]
+  }
 }
 
 
@@ -353,6 +359,12 @@ data "aws_iam_policy_document" "codepipeline_policy" {
     ]
 
     resources = ["*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["arn:aws:secretsmanager:us-west-2:962804699607:secret:cohort4-group3-cap2-secret-BiI0vD"]
   }
 }
 
