@@ -3,8 +3,22 @@ phases:
   install:
     commands:
       - echo install step...
+      - echo Installing app dependencies...
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-02/bin/linux/amd64/kubectl
+      - chmod +x ./kubectl
+      - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+      - echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+      - source ~/.bashrc
+      - echo 'Check kubectl version'
+      - kubectl version --short --client
   pre_build:
     commands:
+      - echo Logging into Amazon EKS...
+      - aws eks --region us-west-2 update-kubeconfig --name cohort4-group3-cap2-eks-cluster-c
+      - echo check config
+      - kubectl config view --minify
+      - echo check kubectl access
+      - kubectl get svc
       - echo logging in to AWS ECR...
       - $(aws ecr get-login --no-include-email --region us-west-2)
   build:
@@ -20,5 +34,9 @@ phases:
       - docker push 962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2-c:latest
       - echo Writing image definitions file ...
       - printf '[{"name":"todo-c","imageUri":"962804699607.dkr.ecr.us-west-2.amazonaws.com/cohort4-group3-cap2-c:latest"}]' > ../imagedefinitions.json
+      - kubectl apply -f deployment.yml
+      - kubectl apply -f service.yml
+      - kubectl rollout restart -f deployment.yml
+      - kubectl get svc --all-namespaces
 artifacts:
   files: imagedefinitions.json
